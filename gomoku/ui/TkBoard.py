@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gomoku.types import FieldType
+from gomoku.types import FieldType, PlayerColor
 
 
 class TkBoard(tk.Frame):
@@ -9,20 +9,27 @@ class TkBoard(tk.Frame):
     BACKGROUND_COLOR = "#ffdd99"
     FIELD_BORDER_COLOR = "black"
 
+    HIGHLIGHT_BORDER_COLORS = {
+        PlayerColor.BLUE: "#66b3ff",
+        PlayerColor.RED: "#ff6633"
+    }
+
     STONE_COLORS = {
         FieldType.BLUE: "#0066cc",
         FieldType.RED: "#b32d00"
     }
 
-    def __init__(self, parent=None, players=None, board=None):
+    def __init__(self, parent=None, players=None, board=None, get_advice=None):
         self.parent = parent
 
         self.players = players
-        self.current_player = next(self.players)
+        self.current_player = None
 
         self.board = board
         self.cols = board.COLS
         self.rows = board.ROWS
+
+        self.get_advice = get_advice
 
         canvas_with = self.cols * self.FIELD_SIZE
         canvas_height = self.rows * self.FIELD_SIZE
@@ -34,6 +41,8 @@ class TkBoard(tk.Frame):
 
         self.canvas.bind("<Configure>", self.refresh)
         self.canvas.bind("<Button-1>", self.click)
+
+        self.set_current_player()
 
     def refresh(self, event=None):
         if event:
@@ -47,8 +56,8 @@ class TkBoard(tk.Frame):
             for col in range(self.cols):
                 x1 = (col * self.size)
                 y1 = (row * self.size)
-                x2 = x1 + self.size
-                y2 = y1 + self.size
+                x2 = x1 + self.size - 3
+                y2 = y1 + self.size - 3
 
                 field = self.board.get_field(row, col)
                 field.x_start = x1
@@ -56,7 +65,10 @@ class TkBoard(tk.Frame):
                 field.y_start = y1
                 field.y_end = y2
 
-                self.canvas.create_rectangle(x1, y1, x2, y2, outline=self.FIELD_BORDER_COLOR,
+                field_border_color = self.HIGHLIGHT_BORDER_COLORS[self.current_player.color] if field.is_recommended else self.FIELD_BORDER_COLOR
+
+                field_border_width = 3 if field.is_recommended else 1
+                self.canvas.create_rectangle(x1, y1, x2, y2, outline=field_border_color, width=field_border_width,
                                              fill=self.BACKGROUND_COLOR, tags="field")
                 if field.type is not FieldType.EMPTY:
                     stone_color = self.STONE_COLORS[field.type]
@@ -66,9 +78,17 @@ class TkBoard(tk.Frame):
 
     def click(self, event):
         x, y = self.board.get_field_indices_from_gui(event.x, event.y)
-        self.board.set_field_taken(x, y, self.current_player)
-        self.refresh()
-        self.change_player()
+        if x >= 0 and y >= 0:
+            if self.board.set_field_taken(x, y, self.current_player):
+                self.set_current_player()
+                self.refresh()
 
-    def change_player(self):
+    def set_current_player(self):
         self.current_player = next(self.players)
+        recommended_fields = self.get_advice(self.board.printable_fields, self.current_player.signature)
+
+        print(recommended_fields)
+        if len(recommended_fields) > 0:
+            self.board.set_field_recommended(recommended_fields[0][0], recommended_fields[0][1])
+        else:
+            self.board.reset_recommended_fields()
