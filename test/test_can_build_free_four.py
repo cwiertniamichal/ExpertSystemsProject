@@ -1,22 +1,21 @@
+import prolog.KnowledgeBase as KnowledgeBase
 from pyswip import Prolog
 
 
 def canBuildFree4(board, player='x'):
     prolog = Prolog()
-    prolog.consult('Gomoku.pl')
+    prolog.consult(KnowledgeBase.PATH)
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query('canBuildFree4({}, {}, X, Y).'.format(player,
-                                                                board))]
+             prolog.query(KnowledgeBase.CAN_BUILD_FREE_4_PREDICATE.format(player, board))]
 
     return moves
 
 
 def opponentCanBuildFree4(board, player='o'):
     prolog = Prolog()
-    prolog.consult('Gomoku.pl')
+    prolog.consult(KnowledgeBase.PATH)
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query('opponentCanBuildFree4({}, {}, X, Y).'
-                          .format(player, board))]
+             prolog.query(KnowledgeBase.OPPONENT_CAN_BUILD_FREE_4_PREDICATE.format(player, board))]
 
     return moves
 

@@ -1,22 +1,21 @@
+import prolog.KnowledgeBase as KnowledgeBase
 from pyswip import Prolog
 
 
 def can_win_in_one_move(board, player='x'):
     prolog = Prolog()
-    prolog.consult('Gomoku.pl')
+    prolog.consult(KnowledgeBase.PATH)
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query('canWinInOneMove({}, {}, X, Y).'.format(player,
-                                                                  board))]
+             prolog.query(KnowledgeBase.CAN_WIN_IN_ONE_MOVE_PREDICATE.format(player, board))]
 
     return moves
 
 
 def opponentCanWinInOneMove(board, player='o'):
     prolog = Prolog()
-    prolog.consult('Gomoku.pl')
+    prolog.consult(KnowledgeBase.PATH)
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query('opponentCanWinInOneMove({}, {}, X, Y).'
-                          .format(player, board))]
+             prolog.query(KnowledgeBase.OPPONENT_CAN_WIN_IN_ONE_MOVE_PREDICATE.format(player, board))]
 
     return moves
 

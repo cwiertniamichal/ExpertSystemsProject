@@ -1,3 +1,4 @@
+import prolog.KnowledgeBase as KnowledgeBase
 from pyswip import Prolog
 
 
@@ -10,10 +11,9 @@ def opponent(player):
 
 def give_advice(board, player):
     prolog = Prolog()
-    prolog.consult('Gomoku.pl')
+    prolog.consult(KnowledgeBase.PATH)
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query("givePlayerAdvice({}, {}, X, Y).".format(player,
-                                                                   board))]
+             prolog.query(KnowledgeBase.GIVE_PLAYER_ADVICE_PREDICATE.format(player, board))]
 
     return moves
 
@@ -45,8 +45,3 @@ def main():
         x, y = input('Type x y: ').split()
         board[int(x)][int(y)] = player
         player = opponent(player)
-
-
-if __name__ == '__main__':
-    main()
-
