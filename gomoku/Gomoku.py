@@ -1,12 +1,6 @@
-import prolog.KnowledgeBase as KnowledgeBase
 from pyswip import Prolog
 
-
-def opponent(player):
-    if player == 'x':
-        return 'o'
-    else:
-        return 'x'
+import prolog.KnowledgeBase as KnowledgeBase
 
 
 def give_advice(board, player):
@@ -23,25 +17,11 @@ def print_board(board):
         print(board[x])
 
 
-def main():
-    board = [
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-    ]
-    player = 'x'
-
+def main(players, board):
     while True:
-        print_board(board)
-        moves = give_advice(board, player)
+        player = next(players)
+        print_board(board.printable_fields)
+        moves = give_advice(board.printable_fields, player.signature)
         print(moves)
         x, y = input('Type x y: ').split()
-        board[int(x)][int(y)] = player
-        player = opponent(player)
+        board.set_field_taken(int(x), int(y), player.color)
