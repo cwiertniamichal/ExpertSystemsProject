@@ -1,0 +1,1 @@
+from gomoku.ui.TkBoard import TkBoard

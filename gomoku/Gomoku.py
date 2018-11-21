@@ -1,6 +1,8 @@
 from pyswip import Prolog
+from tkinter import Tk
 
 import prolog.KnowledgeBase as KnowledgeBase
+from gomoku.ui import TkBoard
 
 
 def give_advice(board, player):
@@ -17,11 +19,17 @@ def print_board(board):
         print(board[x])
 
 
-def main(players, board):
-    while True:
-        player = next(players)
-        print_board(board.printable_fields)
-        moves = give_advice(board.printable_fields, player.signature)
-        print(moves)
-        x, y = input('Type x y: ').split()
-        board.set_field_taken(int(x), int(y), player.color)
+def run(players, board):
+    root = Tk()
+    root.title("Gomoku")
+
+    tk_board = TkBoard(root, players, board)
+    tk_board.pack(side="top", fill="both", expand="true")
+    root.mainloop()
+    # while True:
+    #     player = next(players)
+    #     print_board(board.printable_fields)
+    #     moves = give_advice(board.printable_fields, player.signature)
+    #     print(moves)
+    #     x, y = input('Type x y: ').split()
+    #     board.set_field_taken(int(x), int(y), player)
