@@ -19,7 +19,6 @@ opponent(o, Opponent) :-
     Opponent = x.
 
 
-
 oppositeDirection(horizontal_inc, OppositeDirection) :-
     OppositeDirection = horizontal_dec.
 oppositeDirection(horizontal_dec, OppositeDirection) :-
@@ -37,6 +36,22 @@ oppositeDirection(diag_left_inc, OppositeDirection) :-
 oppositeDirection(diag_left_dec, OppositeDirection) :-
     OppositeDirection = diag_left_inc.
 
+
+moves(M) :-
+    M = [default, free2, free3, double2Threat, double3Threat, free4, win].
+
+
+getMovePriority(Move, Priority, N) :-
+    moves(M),
+    nth0(N, M, MoveName),
+    MoveName \= Move,
+    NewN is N + 1,
+    getMovePriority(Move, Priority, NewN).
+getMovePriority(Move, Priority, N) :-
+    moves(M),
+    nth0(N, M, MoveName),
+    MoveName = Move,
+    Priority is N.
 
 
 getNextFieldInGivenDirection(X, Y, horizontal_inc, NextX, NextY) :-
@@ -88,81 +103,113 @@ isFieldEmpty(X, Y, Board) :-
 
 
 
-continuousChainExists(Player, N, X, Y, Direction, Board) :-
+continuousChainExists(X, Y, N, Direction, Player, Board) :-
     fieldOccupiedByPlayer(X, Y, Player, Board),
     NewN is N - 1,
     getNextFieldInGivenDirection(X, Y, Direction, NextX, NextY),
-    continuousChainExists(Player, NewN, NextX, NextY, Direction, Board).
-continuousChainExists(Player, 1, X, Y, Direction, Board) :-
+    continuousChainExists(NextX, NextY, NewN, Direction, Player, Board).
+continuousChainExists(X, Y, 1, Direction, Player, Board) :-
     fieldOccupiedByPlayer(X, Y, Player, Board).
 
 
 
-brokenChainExists(Player, N, X, Y, Direction, Board, EmptyX, EmptyY) :-
+brokenChainExists(X, Y, N, Direction, Player, Board, EmptyX, EmptyY) :-
     fieldOccupiedByPlayer(X, Y, Player, Board),
     NewN is N - 1,
     getNextFieldInGivenDirection(X, Y, Direction, NextX, NextY),
-    brokenChainExists(Player, NewN, NextX, NextY, Direction, Board, EmptyX, EmptyY).
-brokenChainExists(Player, N, X, Y, Direction, Board, EmptyX, EmptyY) :-
+    brokenChainExists(NextX, NextY, NewN, Direction, Player, Board, EmptyX, EmptyY).
+brokenChainExists(X, Y, N, Direction, Player, Board, EmptyX, EmptyY) :-
     isFieldEmpty(X, Y, Board),
     NewN is N - 1,
     EmptyX = X,
     EmptyY = Y,
     getNextFieldInGivenDirection(X, Y, Direction, NextX, NextY),
-    continuousChainExists(Player, NewN, NextX, NextY, Direction, Board).
+    continuousChainExists(NextX, NextY, NewN, Direction, Player, Board).
 
 
 
-canBuildContinuousChainInOneMove(Player, N, Direction, Board, TargetX, TargetY) :-
+canBuildContinuousChainInOneMove(N, Direction, Player, Board, TargetX, TargetY) :-
     NewN is N - 1,
-    continuousChainExists(Player, NewN, X, Y, Direction, Board),
+    continuousChainExists(X, Y, NewN, Direction, Player, Board),
     getNthFieldInGivenDirection(X, Y, NewN, Direction, TargetX, TargetY),
     isFieldEmpty(TargetX, TargetY, Board).
-canBuildContinuousChainInOneMove(Player, N, Direction, Board, TargetX, TargetY) :-
-    brokenChainExists(Player, N, NewX, NewY, Direction, Board, TargetX, TargetY).
+canBuildContinuousChainInOneMove(N, Direction, Player, Board, TargetX, TargetY) :-
+    brokenChainExists(_, _, N, Direction, Player, Board, TargetX, TargetY).
+
+
+canBuildContinuousChainInOneMoveAttackingGivenFiled(FieldX, FieldY, N, Player, Board) :-
+    isFieldEmpty(FieldX, FieldY, Board),
+    getNextFieldInGivenDirection(FieldX, FieldY, Direction, NextX, NextY),
+    NewN is N - 1,
+    continuousChainExists(NextX, NextY, NewN, Direction, Player, Board).
+canBuildContinuousChainInOneMoveAttackingGivenFiled(FieldX, FieldY, N, Player, Board) :-
+	brokenChainExists( _, _, N, Direction, Player, Board, FieldX, FieldY).
 
 
 
 % TODO sometimes fields do not have to be empty - our mark is ok
-emptyNFieldsInGivenDirectionExists(N, X, Y, Direction, Board) :-
-    continuousChainExists(e, N, X, Y, Direction, Board),
+emptyNFieldsInGivenDirectionExists(X, Y, N, Direction, Board) :-
+    continuousChainExists(X, Y, N, Direction, e, Board),
     !.
 
 
-
+canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, ChainX, ChainY, ChainDirection) :-
+	isFieldEmpty(FieldX, FieldY, Board),
+	getNextFieldInGivenDirection(FieldX, FieldY, ChainDirection, ChainX, ChainY),
+    NewN is N - 1,
+    continuousChainExists(ChainX, ChainY, NewN, ChainDirection, Player, Board),
+    oppositeDirection(ChainDirection, OppositeDirection),
+    N1 is 5 - NewN,
+    N2 is N1 - 1,
+    emptyNFieldsInGivenDirectionExists(FieldX, FieldY, N1, OppositeDirection, Board),
+    getNthFieldInGivenDirection(ChainX, ChainY, NewN, ChainDirection, AfterChainX, AfterChainY),
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N2, ChainDirection, Board).
+canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, ChainX, ChainY, ChainDirection) :-
+	isFieldEmpty(FieldX, FieldY, Board),
+    N1 is 5 - N,
+    oppositeDirection(ChainDirection, OppositeDirection),
+    brokenChainExists(ChainX, ChainY, N, ChainDirection, Player, Board, FieldX, FieldY),
+    getPrevFieldInGivenDirection(ChainX, ChainY, ChainDirection, BeforeChainX, BeforeChainY),
+    emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N1, OppositeDirection, Board),
+    getNthFieldInGivenDirection(ChainX, ChainY, N, ChainDirection, AfterChainX, AfterChainY),
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N1, ChainDirection, Board).
+	
 
 canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection) :-
     ExistingChainLen is N - 1,
     oppositeDirection(ChainDirection, OppositeDirection),
     N1 is 5 - ExistingChainLen,
     N2 is N1 - 1,
-    continuousChainExists(Player, ExistingChainLen, ChainX, ChainY, ChainDirection, Board),
+    continuousChainExists(ChainX, ChainY, ExistingChainLen, ChainDirection, Player, Board),
     getPrevFieldInGivenDirection(ChainX, ChainY, ChainDirection, BeforeChainX, BeforeChainY),
-    emptyNFieldsInGivenDirectionExists(N1, BeforeChainX, BeforeChainY, OppositeDirection, Board),
+    emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N1, OppositeDirection, Board),
     getNthFieldInGivenDirection(ChainX, ChainY, ExistingChainLen, ChainDirection, AfterChainX, AfterChainY),
-    emptyNFieldsInGivenDirectionExists(N2, AfterChainX, AfterChainY, ChainDirection, Board),
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N2, ChainDirection, Board),
     TargetX = BeforeChainX,
-    TargetY = BeforeChainY.
+    TargetY = BeforeChainY,
+    isFieldEmpty(TargetX, TargetY, Board).
 canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection) :-
     ExistingChainLen is N - 1,
     oppositeDirection(ChainDirection, OppositeDirection),
     N1 is 5 - ExistingChainLen,
     N2 is N1 - 1,
-    continuousChainExists(Player, ExistingChainLen, ChainX, ChainY, ChainDirection, Board),
+    continuousChainExists(ChainX, ChainY, ExistingChainLen, ChainDirection, Player, Board),
     getPrevFieldInGivenDirection(ChainX, ChainY, ChainDirection, BeforeChainX, BeforeChainY),
-    emptyNFieldsInGivenDirectionExists(N2, BeforeChainX, BeforeChainY, OppositeDirection, Board),
+    emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N2, OppositeDirection, Board),
     getNthFieldInGivenDirection(ChainX, ChainY, ExistingChainLen, ChainDirection, AfterChainX, AfterChainY),
-    emptyNFieldsInGivenDirectionExists(N1, AfterChainX, AfterChainY, ChainDirection, Board),
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N1, ChainDirection, Board),
     TargetX = AfterChainX,
-    TargetY = AfterChainY.
+    TargetY = AfterChainY,
+    isFieldEmpty(TargetX, TargetY, Board).
 canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection) :-
     ExistingChainLen is N,
     N1 is 5 - ExistingChainLen,
-    brokenChainExists(Player, ExistingChainLen, ChainX, ChainY, ChainDirection, Board, TargetX, TargetY),
+    oppositeDirection(ChainDirection, OppositeDirection),
+    brokenChainExists(ChainX, ChainY, ExistingChainLen, ChainDirection, Player, Board, TargetX, TargetY),
     getPrevFieldInGivenDirection(ChainX, ChainY, ChainDirection, BeforeChainX, BeforeChainY),
-    emptyNFieldsInGivenDirectionExists(N1, BeforeChainX, BeforeChainY, OppositeDirection, Board),
+    emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N1, OppositeDirection, Board),
     getNthFieldInGivenDirection(ChainX, ChainY, ExistingChainLen, ChainDirection, AfterChainX, AfterChainY),
-    emptyNFieldsInGivenDirectionExists(N1, AfterChainX, AfterChainY, ChainDirection, Board).
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N1, ChainDirection, Board).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,7 +218,7 @@ canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 canBuildDoubleNThreat(Player, N, Board, Target1X, Target1Y) :-
-    canBuildFreeN(Player, Board, N, Target1X, Target1Y, Chain1X, ChainY, Chain1Direction),
+    canBuildFreeN(Player, Board, N, Target1X, Target1Y, Chain1X, Chain1Y, Chain1Direction),
     canBuildFreeN(Player, Board, N, Target2X, Target2Y, Chain2X, Chain2Y, Chain2Direction),
     TargetX1 = TargetX2,
     TargetY1 = TargetY2,
@@ -180,10 +227,25 @@ canBuildDoubleNThreat(Player, N, Board, Target1X, Target1Y) :-
     oppositeDirection(Chain1Direction, Chain1OppositeDirection),
     Chain1OppositeDirection \= Chain2Direction.
 canBuildDoubleNThreat(Player, N, Board, Target1X, Target1Y) :-
-    canBuildFreeN(Player, Board, N, Target1X, Target1Y, Chain1X, ChainY, Chain1Direction),
+    canBuildFreeN(Player, Board, N, Target1X, Target1Y, Chain1X, Chain1Y, Chain1Direction),
     canBuildFreeN(Player, Board, N, Target2X, Target2Y, Chain2X, Chain2Y, Chain2Direction),
     TargetX1 = TargetX2,
     TargetY1 = TargetY2,
+    Chain1Y \= Chain2Y,
+    Chain1Direction \= Chain2Direction,
+    oppositeDirection(Chain1Direction, Chain1OppositeDirection),
+    Chain1OppositeDirection \= Chain2Direction.
+
+canBuildDoubleNThreatAttackingGivenFiled(Player, N, Board, FieldX, FieldY) :-
+    canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, Chain1X, Chain1Y, Chain1Direction),
+    canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, Chain2X, Chain2Y, Chain2Direction),
+    Chain1X \= Chain2X,
+    Chain1Direction \= Chain2Direction,
+    oppositeDirection(Chain1Direction, Chain1OppositeDirection),
+    Chain1OppositeDirection \= Chain2Direction.
+canBuildDoubleNThreatAttackingGivenFiled(Player, N, Board, FieldX, FieldY) :-
+    canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, Chain1X, Chain1Y, Chain1Direction),
+    canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, Chain2X, Chain2Y, Chain2Direction),
     Chain1Y \= Chain2Y,
     Chain1Direction \= Chain2Direction,
     oppositeDirection(Chain1Direction, Chain1OppositeDirection),
@@ -195,17 +257,10 @@ canBuildDoubleNThreat(Player, N, Board, Target1X, Target1Y) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 canWinInOneMove(Player, Board, X, Y) :-
-    canBuildContinuousChainInOneMove(Player, 5, Direction, Board, X, Y).
+    canBuildContinuousChainInOneMove(5, Direction, Player, Board, X, Y).
 
 canBuildFree4(Player, Board, TargetX, TargetY) :-
     canBuildFreeN(Player, Board, 4, TargetX, TargetY, _, _, _).
-% canBuildFree4(Player, Board, TargetX, TargetY) :-
-%    brokenChainExists(Player, 4, ChainX, ChainY, Direction, Board, TargetX, TargetY),
-%    getPrevFieldInGivenDirection(ChainX, ChainY, Direction, BeforeChainX, BeforeChainY),
-%    isFieldEmpty(BeforeChainX, BeforeChainY, Board),
-%    getNthFieldInGivenDirection(ChainX, ChainY, 4, Direction, AfterChainX, AfterChainY),
-%    isFieldEmpty(AfterChainX, AfterChainY, Board).
-
 
 canBuildDouble3Threat(Player, Board, X, Y) :-
     canBuildDoubleNThreat(Player, 3, Board, X, Y).
@@ -217,9 +272,11 @@ opponentCanWinInOneMove(Player, Board, X, Y) :-
     opponent(Player, Opponent),
     canWinInOneMove(Opponent, Board, X ,Y).
 
-opponentCanBuildFree4(Player, Board, X, Y) :-
+opponentCanBuildFree4(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board) :-
     opponent(Player, Opponent),
-    canBuildFree4(Opponent, Board, X, Y).
+    canBuildFree4(Opponent, Board, X, Y),
+    setBestMove(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board), 
+    opponentCanBuildFree4(_, _, NewBestMovePriority, _, Player, Board).
 
 opponentCanBuildDouble3Threat(Player, Board, X, Y) :-
     opponent(Player, Opponent),
@@ -230,18 +287,77 @@ opponentCanBuildDouble2Threat(Player, Board, X, Y) :-
     canBuildDouble2Threat(Opponent, Board, X, Y).
 
 
+setBestMove(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board) :-
+    attackMoves(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board),
+    NewBestMovePriority > CurrBestMovePriority,
+    retractall(best(_, _)),
+    asserta(best(X, Y)),
+    !.
 
-givePlayerAdvice(Player, Board, X, Y) :-
-    canWinInOneMove(Player, Board, X, Y), !;
-    opponentCanWinInOneMove(Player, Board, X, Y), !;
-    canBuildFree4(Player, Board, X, Y), !;
-    opponentCanBuildFree4(Player, Board, X, Y), !;
-    canBuildDouble3Threat(Player, Board, X, Y), !;
-    opponentCanBuildDouble3Threat(Player, Board, X, Y), !;
-    canBuildDouble2Threat(Player, Board, X, Y), !;
-    opponentCanBuildDouble2Threat(Player, Board, X, Y), !;
-    canBuildFreeN(Player, Board, 3, X, Y, _, _, _), !;
-    canBuildFreeN(Player, Board, 2, X, Y, _, _, _), !;
-    canBuildFreeN(Player, Board, 1, X, Y, _, _, _), !.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+	canBuildContinuousChainInOneMoveAttackingGivenFiled(X, Y, 5, Player, Board),
+	getMovePriority(win, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+    canBuildFreeNAttackingGivenField(Player, Board, 4, X, Y, _, _, _),
+    getMovePriority(free4, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+    canBuildDoubleNThreatAttackingGivenFiled(Player, 3, Board, X, Y),
+    getMovePriority(double3Threat, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+    canBuildDoubleNThreatAttackingGivenFiled(Player, 2, Board, X, Y),
+    getMovePriority(double2Threat, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+    canBuildFreeNAttackingGivenField(Player, 3, Board, X, Y, _, _, _),
+    getMovePriority(free3, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+    canBuildFreeNAttackingGivenField(Player, 2, Board, X, Y, _, _, _),
+    getMovePriority(free2, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
+attackMoves(X, Y, CurrBestPriority, NewBestPriority, Player, Board) :-
+    getMovePriority(default, NewBestPriority, 0),
+    CurrBestPriority < NewBestPriority.
 
+
+blockOpponentFree4(Player, Board, X ,Y) :-
+    \+ opponentCanBuildFree4(_, _, -1, _, Player, Board),
+    current_predicate(best/2),
+    best(X, Y).
+
+
+givePlayerAdvice(Player, Board, X, Y, PredName) :-
+    canWinInOneMove(Player, Board, X, Y),
+    PredName = canWinInOneMove, !;
+    opponentCanWinInOneMove(Player, Board, X, Y),
+    PredName = opponentCanWinInOneMove, !;
+
+    canBuildFree4(Player, Board, X, Y),
+    PredName = canBuildFree4, !;
+    blockOpponentFree4(Player, Board, X, Y),
+    retractall(best(_, _)),
+    PredName = blockOpponentFree4, !;
+
+    canBuildDouble3Threat(Player, Board, X, Y),
+    PredName = canBuildDouble3Threat, !;
+    opponentCanBuildDouble3Threat(Player, Board, X, Y),
+    PredName = opponentCanBuildDouble3Threat, !;
+
+    canBuildDouble2Threat(Player, Board, X, Y),
+    PredName = canBuildDouble2Threat, !;
+    opponentCanBuildDouble2Threat(Player, Board, X, Y),
+    PredName = opponentCanBuildDouble2Threat, !;
+
+    canBuildFreeN(Player, Board, 3, X, Y, _, _, _),
+    PredName = canBuildFreeN, !;
+    canBuildFreeN(Player, Board, 2, X, Y, _, _, _),
+    PredName = canBuildFreeN, !;
+    canBuildFreeN(Player, Board, 1, X, Y, _, _, _),
+    PredName = canBuildFreeN, !;
+
+    X is 5,
+    Y is 5.
 

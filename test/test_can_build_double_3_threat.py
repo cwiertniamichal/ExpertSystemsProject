@@ -1,10 +1,11 @@
 import prolog.KnowledgeBase as KnowledgeBase
 from pyswip import Prolog
+import os
 
 
 def canBuildDouble3Threat(board, player='x'):
     prolog = Prolog()
-    prolog.consult(KnowledgeBase.PATH)
+    prolog.consult(os.path.join('..', KnowledgeBase.PATH))
     moves = [(soln['X'], soln['Y']) for soln in
              prolog.query(KnowledgeBase.CAN_BUILD_DOUBLE_3_THREAD_PREDICATE.format(player, board))]
 
@@ -13,7 +14,7 @@ def canBuildDouble3Threat(board, player='x'):
 
 def opponentCanBuildDouble3Threat(board, player='o'):
     prolog = Prolog()
-    prolog.consult(KnowledgeBase.PATH)
+    prolog.consult(os.path.join('..', KnowledgeBase.PATH))
     moves = [(soln['X'], soln['Y']) for soln in
              prolog.query(KnowledgeBase.OPPONENT_CAN_BUILD_DOUBLE_3_THREAD_PREDICATE.format(player, board))]
 

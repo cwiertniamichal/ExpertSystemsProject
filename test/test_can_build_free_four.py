@@ -1,21 +1,24 @@
 import prolog.KnowledgeBase as KnowledgeBase
 from pyswip import Prolog
+import os
 
 
-def canBuildFree4(board, player='x'):
+def can_build_free_4(board, player='x'):
     prolog = Prolog()
-    prolog.consult(KnowledgeBase.PATH)
+    prolog.consult(os.path.join('..', KnowledgeBase.PATH))
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query(KnowledgeBase.CAN_BUILD_FREE_4_PREDICATE.format(player, board))]
-
+             prolog.query(KnowledgeBase.CAN_BUILD_FREE_4_PREDICATE
+                          .format(player, board))]
     return moves
 
 
 def opponentCanBuildFree4(board, player='o'):
     prolog = Prolog()
-    prolog.consult(KnowledgeBase.PATH)
+    prolog.consult(os.path.join('..', KnowledgeBase.PATH))
     moves = [(soln['X'], soln['Y']) for soln in
-             prolog.query(KnowledgeBase.OPPONENT_CAN_BUILD_FREE_4_PREDICATE.format(player, board))]
+             prolog.query(KnowledgeBase
+                          .OPPONENT_CAN_BUILD_FREE_4_PREDICATE
+                          .format(player, board))]
 
     return moves
 
@@ -27,7 +30,7 @@ def test_can_build_free_four():
         ['e', 'e', 'e', 'e', 'e', 'e', 'e'],
     ]
 
-    assert (1, 5) in canBuildFree4(board) or (1, 1) in canBuildFree4(board)
+    assert (1, 5) in can_build_free_4(board) or (1, 1) in can_build_free_4(board)
 
 
 def test_can_build_free_four2():
@@ -37,7 +40,7 @@ def test_can_build_free_four2():
         ['e', 'e', 'e', 'e', 'e', 'e', 'e'],
     ]
 
-    assert (1, 4) in canBuildFree4(board)
+    assert (1, 4) in can_build_free_4(board)
 
 
 def test_can_build_free_four3():
@@ -47,7 +50,7 @@ def test_can_build_free_four3():
         ['e', 'e', 'e', 'e', 'e', 'e', 'e'],
     ]
 
-    assert (1, 1) in canBuildFree4(board)
+    assert (1, 1) in can_build_free_4(board)
 
 
 def test_can_build_free_four4():
@@ -61,7 +64,7 @@ def test_can_build_free_four4():
         ['e', 'o', 'e', 'e', 'e', 'e', 'e'],
     ]
 
-    assert (3, 1) in canBuildFree4(board)
+    assert (3, 1) in can_build_free_4(board)
 
 
 def test_can_build_free_four5():
@@ -75,7 +78,7 @@ def test_can_build_free_four5():
         ['e', 'e', 'e', 'e', 'e', 'e', 'e'],
     ]
 
-    assert (5, 5) in canBuildFree4(board)
+    assert (5, 5) in can_build_free_4(board)
 
 
 def test_can_build_free_four6():
@@ -89,7 +92,7 @@ def test_can_build_free_four6():
         ['e', 'e', 'e', 'e', 'e', 'e', 'e'],
     ]
 
-    assert (4, 1) in canBuildFree4(board)
+    assert (4, 1) in can_build_free_4(board)
 
 
 def test_block_free_four():

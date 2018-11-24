@@ -8,7 +8,7 @@ from gomoku.ui import TkBoard
 def get_advice(board, player):
     prolog = Prolog()
     prolog.consult(KnowledgeBase.PATH)
-    moves = [(soln['X'], soln['Y']) for soln in
+    moves = [(soln['X'], soln['Y'], soln['PredName']) for soln in
              prolog.query(KnowledgeBase.GIVE_PLAYER_ADVICE_PREDICATE.format(player, board))]
 
     return moves
