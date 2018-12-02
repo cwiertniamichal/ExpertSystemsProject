@@ -8,7 +8,7 @@ class TkBoard(tk.Frame):
 
     BACKGROUND_COLOR = "#ffdd99"
     FIELD_BORDER_COLOR = "black"
-    FIELD_IN_WINNING_FIVE_COLOR = "#ff9900"
+    FIELD_IN_WINNING_FIVE_COLOR = "#77b300"
 
     HIGHLIGHT_BORDER_COLORS = {
         PlayerColor.BLUE: "#66b3ff",
