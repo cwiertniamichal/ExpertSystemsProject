@@ -8,6 +8,7 @@ class TkBoard(tk.Frame):
 
     BACKGROUND_COLOR = "#ffdd99"
     FIELD_BORDER_COLOR = "black"
+    FIELD_IN_WINNING_FIVE_COLOR = "#ff9900"
 
     HIGHLIGHT_BORDER_COLORS = {
         PlayerColor.BLUE: "#66b3ff",
@@ -19,7 +20,7 @@ class TkBoard(tk.Frame):
         FieldType.RED: "#b32d00"
     }
 
-    def __init__(self, parent=None, players=None, board=None, get_advice=None):
+    def __init__(self, parent=None, players=None, board=None, get_advice=None, has_any_player_five_stones=None):
         self.parent = parent
 
         self.players = players
@@ -30,6 +31,7 @@ class TkBoard(tk.Frame):
         self.rows = board.ROWS
 
         self.get_advice = get_advice
+        self.has_any_player_five_stones = has_any_player_five_stones
 
         canvas_with = self.cols * self.FIELD_SIZE
         canvas_height = self.rows * self.FIELD_SIZE
@@ -65,9 +67,10 @@ class TkBoard(tk.Frame):
                 field.y_start = y1
                 field.y_end = y2
 
-                field_border_color = self.HIGHLIGHT_BORDER_COLORS[self.current_player.color] if field.is_recommended else self.FIELD_BORDER_COLOR
+                field_border_color = self.FIELD_IN_WINNING_FIVE_COLOR if field.is_in_winning_five else \
+                    (self.HIGHLIGHT_BORDER_COLORS[self.current_player.color] if field.is_recommended else self.FIELD_BORDER_COLOR)
 
-                field_border_width = 3 if field.is_recommended else 1
+                field_border_width = 3 if field.is_recommended or field.is_in_winning_five else 1
                 self.canvas.create_rectangle(x1, y1, x2, y2, outline=field_border_color, width=field_border_width,
                                              fill=self.BACKGROUND_COLOR, tags="field")
                 if field.type is not FieldType.EMPTY:
@@ -80,7 +83,10 @@ class TkBoard(tk.Frame):
         x, y = self.board.get_field_indices_from_gui(event.x, event.y)
         if x >= 0 and y >= 0:
             if self.board.set_field_taken(x, y, self.current_player):
-                self.set_current_player()
+                if self.should_finish_game():
+                    self.finish_game()
+                else:
+                    self.set_current_player()
                 self.refresh()
 
     def set_current_player(self):
@@ -92,3 +98,9 @@ class TkBoard(tk.Frame):
             self.board.set_field_recommended(recommended_fields[0][0], recommended_fields[0][1])
         else:
             self.board.reset_recommended_fields()
+
+    def should_finish_game(self):
+        return self.has_any_player_five_stones(self.board)
+
+    def finish_game(self):
+        self.canvas.unbind("<Button-1>")

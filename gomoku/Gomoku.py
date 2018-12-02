@@ -14,15 +14,14 @@ def get_advice(board, player):
     return moves
 
 
-def print_board(board):
-    for x in range(len(board)):
-        print(board[x])
+def has_any_player_five_stones(board):
+    return board.has_five_in_horizontally or board.has_five_in_vertically or board.has_five_diagonally
 
 
 def run(players, board):
     root = Tk()
     root.title("Gomoku")
 
-    tk_board = TkBoard(root, players, board, get_advice)
+    tk_board = TkBoard(root, players, board, get_advice, has_any_player_five_stones)
     tk_board.pack(side="top", fill="both", expand="true")
     root.mainloop()

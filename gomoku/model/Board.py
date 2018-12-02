@@ -8,12 +8,30 @@ class Board:
 
     @property
     def printable_fields(self):
-        return list(map(
-            lambda row: list(map(
-                lambda field: field.type.value,
-                row)),
-            self.fields
-        ))
+        return [[field.type.value for field in row] for row in self.fields]
+
+    @property
+    def fields_with_indices(self):
+        return [[(field, (x, y)) for y, field in enumerate(row)] for x, row in enumerate(self.fields)]
+
+    @property
+    def has_five_in_horizontally(self):
+        five_in_row = _find_five_in_rows(self.fields_with_indices, 1)
+        for x, y in five_in_row:
+            self.fields[x][y].is_in_winning_five = True
+        return len(five_in_row) > 0
+
+    @property
+    def has_five_in_vertically(self):
+        transposed_fields_with_indices = [list(columns) for columns in zip(*self.fields_with_indices)]
+        five_in_row = _find_five_in_rows(transposed_fields_with_indices, 0)
+        for x, y in five_in_row:
+            self.fields[x][y].is_in_winning_five = True
+        return len(five_in_row) > 0
+
+    @property
+    def has_five_diagonally(self):
+        return False
 
     def __init__(self, fields=None):
         self.fields = fields
@@ -56,3 +74,33 @@ class Board:
 
         if self.fields[x][y].type is FieldType.EMPTY:
             self.fields[x][y].is_recommended = True
+
+
+def _find_five_in_rows(fields, coordinate_index):
+    non_empty_fields = list(filter(
+        lambda row: len(row) > 0,
+        [list(filter(lambda field_with_index: not field_with_index[0].is_empty, row)) for row in fields]
+    ))
+
+    grouped_non_empty_fields = [{FieldType.BLUE: [], FieldType.RED: []} for _ in non_empty_fields]
+    for index, row in enumerate(non_empty_fields):
+        for field_with_index in row:
+            grouped_non_empty_fields[index][field_with_index[0].type].append(field_with_index[1])
+
+    for field in grouped_non_empty_fields:
+        for _, row in field.items():
+            five_in_row = _find_five_in_row(row, coordinate_index)
+            if len(five_in_row) > 0:
+                return five_in_row
+
+    return []
+
+
+def _find_five_in_row(row, coordinate_index):
+    five_in_row = []
+    for field in row:
+        if len(five_in_row) == 0 or field[coordinate_index] - five_in_row[-1][coordinate_index] == 1:
+            five_in_row.append(field)
+        else:
+            five_in_row.clear()
+    return five_in_row if len(five_in_row) == 5 else []
