@@ -109,9 +109,11 @@ def _find_five_in_row(row, coordinate_index):
     for field in row:
         if len(five_in_row) == 0 or field[coordinate_index] - five_in_row[-1][coordinate_index] == 1:
             five_in_row.append(field)
+            if len(five_in_row) == 5:
+                return five_in_row
         else:
             five_in_row.clear()
-    return five_in_row if len(five_in_row) == 5 else []
+    return []
 
 
 def _find_five_diagonally(fields):
@@ -164,6 +166,8 @@ def _find_five_in_row_diagonally(diagonal):
         if len(five_in_row) == 0 or \
                 (abs(field[0] - five_in_row[-1][0]) == 1 and abs(field[1] - five_in_row[-1][1]) == 1):
             five_in_row.append(field)
+            if len(five_in_row) == 5:
+                return five_in_row
         else:
             five_in_row.clear()
-    return five_in_row if len(five_in_row) == 5 else []
+    return []
