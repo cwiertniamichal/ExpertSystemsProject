@@ -210,6 +210,32 @@ canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection
     emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N1, OppositeDirection, Board),
     getNthFieldInGivenDirection(ChainX, ChainY, ExistingChainLen, ChainDirection, AfterChainX, AfterChainY),
     emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N1, ChainDirection, Board).
+canBuildFreeN(Player, Board, 1, TargetX, TargetY, ChainX, ChainY, ChainDirection) :-
+    oppositeDirection(ChainDirection, OppositeDirection),
+    opponent(Player, Opponent),
+    N1 is 5,
+    N2 is 4,
+    continuousChainExists(ChainX, ChainY, 1, ChainDirection, Opponent, Board),
+    getPrevFieldInGivenDirection(ChainX, ChainY, ChainDirection, BeforeChainX, BeforeChainY),
+    emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N1, OppositeDirection, Board),
+    getNthFieldInGivenDirection(ChainX, ChainY, ExistingChainLen, ChainDirection, AfterChainX, AfterChainY),
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N2, ChainDirection, Board),
+    TargetX = BeforeChainX,
+    TargetY = BeforeChainY,
+    isFieldEmpty(TargetX, TargetY, Board).
+canBuildFreeN(Player, Board, 1, TargetX, TargetY, ChainX, ChainY, ChainDirection) :-
+    oppositeDirection(ChainDirection, OppositeDirection),
+    opponent(Player, Opponent),
+    N1 is 5,
+    N2 is 4,
+    continuousChainExists(ChainX, ChainY, 1, ChainDirection, Opponent, Board),
+    getPrevFieldInGivenDirection(ChainX, ChainY, ChainDirection, BeforeChainX, BeforeChainY),
+    emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N2, OppositeDirection, Board),
+    getNthFieldInGivenDirection(ChainX, ChainY, ExistingChainLen, ChainDirection, AfterChainX, AfterChainY),
+    emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N1, ChainDirection, Board),
+    TargetX = AfterChainX,
+    TargetY = AfterChainY,
+    isFieldEmpty(TargetX, TargetY, Board).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -354,10 +380,13 @@ givePlayerAdvice(Player, Board, X, Y, PredName) :-
 
     canBuildFreeN(Player, Board, 2, X, Y, _, _, _),
     PredName = canBuildFree2, !;
+
     opponentCanBuildDouble2Threat(Player, Board, X, Y),
     PredName = opponentCanBuildDouble2Threat, !;
+
     canBuildFreeN(Player, Board, 1, X, Y, _, _, _),
     PredName = canBuildFree1, !;
 
     X is 5,
-    Y is 5.
+    Y is 5,
+    isFieldEmpty(X, Y, Board).
