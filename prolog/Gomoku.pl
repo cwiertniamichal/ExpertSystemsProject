@@ -220,20 +220,20 @@ canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection
 canBuildDoubleNThreat(Player, N, Board, Target1X, Target1Y) :-
     canBuildFreeN(Player, Board, N, Target1X, Target1Y, Chain1X, Chain1Y, Chain1Direction),
     canBuildFreeN(Player, Board, N, Target2X, Target2Y, Chain2X, Chain2Y, Chain2Direction),
-    TargetX1 = TargetX2,
-    TargetY1 = TargetY2,
+    Target1X = Target2X,
+    Target1Y = Target2Y,
     Chain1X \= Chain2X,
-    Chain1Direction \= Chain2Direction,
     oppositeDirection(Chain1Direction, Chain1OppositeDirection),
+    Chain1Direction \= Chain2Direction,
     Chain1OppositeDirection \= Chain2Direction.
 canBuildDoubleNThreat(Player, N, Board, Target1X, Target1Y) :-
     canBuildFreeN(Player, Board, N, Target1X, Target1Y, Chain1X, Chain1Y, Chain1Direction),
     canBuildFreeN(Player, Board, N, Target2X, Target2Y, Chain2X, Chain2Y, Chain2Direction),
-    TargetX1 = TargetX2,
-    TargetY1 = TargetY2,
+    Target1X = Target2X,
+    Target1Y = Target2Y,
     Chain1Y \= Chain2Y,
-    Chain1Direction \= Chain2Direction,
     oppositeDirection(Chain1Direction, Chain1OppositeDirection),
+    Chain1Direction \= Chain2Direction,
     Chain1OppositeDirection \= Chain2Direction.
 
 canBuildDoubleNThreatAttackingGivenFiled(Player, N, Board, FieldX, FieldY) :-
@@ -351,11 +351,11 @@ givePlayerAdvice(Player, Board, X, Y, PredName) :-
 
     canBuildDouble2Threat(Player, Board, X, Y),
     PredName = canBuildDouble2Threat, !;
-    opponentCanBuildDouble2Threat(Player, Board, X, Y),
-    PredName = opponentCanBuildDouble2Threat, !;
 
     canBuildFreeN(Player, Board, 2, X, Y, _, _, _),
     PredName = canBuildFree2, !;
+    opponentCanBuildDouble2Threat(Player, Board, X, Y),
+    PredName = opponentCanBuildDouble2Threat, !;
     canBuildFreeN(Player, Board, 1, X, Y, _, _, _),
     PredName = canBuildFree1, !;
 
