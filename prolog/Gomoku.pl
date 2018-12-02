@@ -5,7 +5,7 @@
 %       - Board:
 %           - if board field is empty, then e is in that field
 %           - possible directions:
-%               - horizontal_inc and horizontal_dec 
+%               - horizontal_inc and horizontal_dec
 %               - vertical_inv and vertical_dev
 %               - diag_right_inc and diag_right_dec (\)
 %               - diag_left_inc and diag_left_dev (/)
@@ -173,7 +173,7 @@ canBuildFreeNAttackingGivenField(Player, Board, N, FieldX, FieldY, ChainX, Chain
     emptyNFieldsInGivenDirectionExists(BeforeChainX, BeforeChainY, N1, OppositeDirection, Board),
     getNthFieldInGivenDirection(ChainX, ChainY, N, ChainDirection, AfterChainX, AfterChainY),
     emptyNFieldsInGivenDirectionExists(AfterChainX, AfterChainY, N1, ChainDirection, Board).
-	
+
 
 canBuildFreeN(Player, Board, N, TargetX, TargetY, ChainX, ChainY, ChainDirection) :-
     ExistingChainLen is N - 1,
@@ -275,7 +275,7 @@ opponentCanWinInOneMove(Player, Board, X, Y) :-
 opponentCanBuildFree4(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board) :-
     opponent(Player, Opponent),
     canBuildFree4(Opponent, Board, X, Y),
-    setBestMove(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board), 
+    setBestMove(X, Y, CurrBestMovePriority, NewBestMovePriority, Player, Board),
     opponentCanBuildFree4(_, _, NewBestMovePriority, _, Player, Board).
 
 opponentCanBuildDouble3Threat(Player, Board, X, Y) :-
@@ -346,18 +346,18 @@ givePlayerAdvice(Player, Board, X, Y, PredName) :-
     opponentCanBuildDouble3Threat(Player, Board, X, Y),
     PredName = opponentCanBuildDouble3Threat, !;
 
+    canBuildFreeN(Player, Board, 3, X, Y, _, _, _),
+    PredName = canBuildFree3, !;
+
     canBuildDouble2Threat(Player, Board, X, Y),
     PredName = canBuildDouble2Threat, !;
     opponentCanBuildDouble2Threat(Player, Board, X, Y),
     PredName = opponentCanBuildDouble2Threat, !;
 
-    canBuildFreeN(Player, Board, 3, X, Y, _, _, _),
-    PredName = canBuildFreeN, !;
     canBuildFreeN(Player, Board, 2, X, Y, _, _, _),
-    PredName = canBuildFreeN, !;
+    PredName = canBuildFree2, !;
     canBuildFreeN(Player, Board, 1, X, Y, _, _, _),
-    PredName = canBuildFreeN, !;
+    PredName = canBuildFree1, !;
 
     X is 5,
     Y is 5.
-
