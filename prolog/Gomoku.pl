@@ -12,6 +12,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- style_check(-singleton).
 
+:- dynamic
+    boardSize/2.
+
 
 opponent(x, Opponent) :-
     Opponent = o.
@@ -355,6 +358,12 @@ blockOpponentFree4(Player, Board, X ,Y) :-
     best(X, Y).
 
 
+setStartFields(X, Y, Rows, Cols) :-
+    boardSize(Rows, Cols),
+    X is div(Rows, 2),
+    Y is div(Cols, 2).
+
+
 givePlayerAdvice(Player, Board, X, Y, PredName) :-
     canWinInOneMove(Player, Board, X, Y),
     PredName = canWinInOneMove, !;
@@ -387,6 +396,5 @@ givePlayerAdvice(Player, Board, X, Y, PredName) :-
     canBuildFreeN(Player, Board, 1, X, Y, _, _, _),
     PredName = canBuildFree1, !;
 
-    X is 5,
-    Y is 5,
+    setStartFields(X, Y, _, _),
     isFieldEmpty(X, Y, Board).

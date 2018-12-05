@@ -1,5 +1,7 @@
 PATH = 'prolog/Gomoku.pl'
 
+BOARD_SIZE_FACT = 'boardSize({}, {})'
+
 GIVE_PLAYER_ADVICE_PREDICATE = 'givePlayerAdvice({}, {}, X, Y, PredName).'
 
 CAN_BUILD_DOUBLE_3_THREAD_PREDICATE = 'canBuildDouble3Threat({}, {}, X, Y).'
